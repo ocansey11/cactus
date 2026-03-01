@@ -1,0 +1,122 @@
+// Android.bp — libcactus shared library for JarvisOS
+// Mirrors CMakeLists.txt in android/ but targets the Soong build system.
+// Output: /system/lib64/libcactus.so
+
+cc_library_shared {
+    name: "libcactus",
+    vendor: false,
+    proprietary: false,
+
+    srcs: [
+        // Engine
+        "cactus/engine/engine_image.cpp",
+        "cactus/engine/engine_sp.cpp",
+        "cactus/engine/engine_signals.cpp",
+        "cactus/engine/engine_model.cpp",
+        "cactus/engine/engine_cache.cpp",
+        "cactus/engine/engine_tokenizer.cpp",
+        "cactus/engine/engine_constraints.cpp",
+        "cactus/engine/engine_index.cpp",
+        "cactus/engine/engine_bpe.cpp",
+
+        // Graph
+        "cactus/graph/graph_ops_tensor.cpp",
+        "cactus/graph/graph_ops_nn.cpp",
+        "cactus/graph/graph_core.cpp",
+        "cactus/graph/graph_ops_sample.cpp",
+        "cactus/graph/graph_ops_math.cpp",
+        "cactus/graph/graph_io.cpp",
+        "cactus/graph/graph_execute.cpp",
+        "cactus/graph/graph_builder.cpp",
+
+        // Kernel
+        "cactus/kernel/kernel_nn.cpp",
+        "cactus/kernel/kernel_quants.cpp",
+        "cactus/kernel/kernel_blas.cpp",
+        "cactus/kernel/kernel_conv.cpp",
+        "cactus/kernel/kernel_reduce.cpp",
+        "cactus/kernel/kernel_attention.cpp",
+        "cactus/kernel/kernel_matmul.cpp",
+        "cactus/kernel/kernel_scalar.cpp",
+
+        // Models
+        "cactus/models/model_siglip2.cpp",
+        "cactus/models/model_nomic.cpp",
+        "cactus/models/model_lfm2vl.cpp",
+        "cactus/models/model_whisper.cpp",
+        "cactus/models/model_lfm2.cpp",
+        "cactus/models/model_gemma.cpp",
+        "cactus/models/model_moonshine.cpp",
+        "cactus/models/model_qwen.cpp",
+
+        // FFI
+        "cactus/ffi/cactus_embed.cpp",
+        "cactus/ffi/cactus_init.cpp",
+        "cactus/ffi/cactus_stream.cpp",
+        "cactus/ffi/cactus_complete.cpp",
+        "cactus/ffi/cactus_rag.cpp",
+        "cactus/ffi/cactus_transcribe.cpp",
+        "cactus/ffi/cactus_index.cpp",
+
+        // NPU (CPU fallback only — npu_ane.mm is iOS/macOS, excluded)
+        "cactus/npu/npu.cpp",
+
+        // JNI bridge — com.cactus + com.android.server.rag.CactusWrapper
+        "android/cactus_jni.cpp",
+    ],
+
+    local_include_dirs: [
+        "cactus",
+        "cactus/engine",
+        "cactus/graph",
+        "cactus/kernel",
+        "cactus/ffi",
+        "cactus/models",
+        "cactus/npu",
+    ],
+
+    shared_libs: [
+        "liblog",
+        "libandroid",
+    ],
+
+    cppflags: [
+        "-std=c++20",
+        "-DPLATFORM_CPU_ONLY=1",
+        "-O3",
+        "-DNDEBUG",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fomit-frame-pointer",
+        "-funroll-loops",
+        "-ftree-vectorize",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
+        "-Wall",
+        "-Wextra",
+        "-Wno-missing-field-initializers",
+        // arm64-v8a NEON/dotprod
+        "-march=armv8.2-a+fp16+simd+dotprod",
+        "-D__ARM_NEON=1",
+        "-D__ARM_FEATURE_FP16_VECTOR_ARITHMETIC=1",
+        "-D__ARM_FEATURE_DOTPROD=1",
+    ],
+
+    ldflags: [
+        "-Wl,--gc-sections",
+        "-Wl,--exclude-libs,ALL",
+        "-Wl,-z,max-page-size=16384",
+    ],
+
+    arch: {
+        arm64: {
+            // arm64-v8a only — matches CMakeLists.txt FATAL_ERROR on other ABIs
+        },
+    },
+
+    stl: "libc++",
+
+    // Install to /system/lib64 so system_server can load it
+    // via System.loadLibrary("cactus") in CactusWrapper.java
+    compile_multilib: "64",
+}
