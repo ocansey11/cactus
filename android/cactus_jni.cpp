@@ -555,7 +555,7 @@ Java_com_cactus_CactusIndex_nativeIndexDestroy(JNIEnv*, jobject, jlong handle) {
 
 // =============================================================================
 // JarvisOS System Service bindings
-// com.android.server.rag.CactusWrapper
+// com.android.server.jarvis.inference.CactusWrapper
 //
 // These mirror the com.cactus bindings above but target the JarvisOS system
 // service package. Methods are static (jclass instead of jobject), and
@@ -563,7 +563,7 @@ Java_com_cactus_CactusIndex_nativeIndexDestroy(JNIEnv*, jobject, jlong handle) {
 // =============================================================================
 
 JNIEXPORT jlong JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeInit(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeInit(
         JNIEnv* env, jclass, jstring modelPath, jstring corpusDir, jboolean cacheIndex) {
     const char* path = jstring_to_cstr(env, modelPath);
     const char* corpus = jstring_to_cstr(env, corpusDir);
@@ -574,14 +574,14 @@ Java_com_android_server_rag_CactusWrapper_nativeInit(
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeDestroy(JNIEnv*, jclass, jlong handle) {
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeDestroy(JNIEnv*, jclass, jlong handle) {
     if (handle != 0) {
         cactus_destroy(reinterpret_cast<cactus_model_t>(handle));
     }
 }
 
 JNIEXPORT jfloatArray JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeEmbed(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeEmbed(
         JNIEnv* env, jclass, jlong handle, jstring text, jboolean normalize) {
     if (handle == 0) return nullptr;
 
@@ -608,7 +608,7 @@ Java_com_android_server_rag_CactusWrapper_nativeEmbed(
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeIndexInit(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeIndexInit(
         JNIEnv* env, jclass, jstring indexDir, jint embeddingDim) {
     const char* dir = jstring_to_cstr(env, indexDir);
     jlong handle = reinterpret_cast<jlong>(cactus_index_init(dir, static_cast<size_t>(embeddingDim)));
@@ -617,7 +617,7 @@ Java_com_android_server_rag_CactusWrapper_nativeIndexInit(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeIndexAdd(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeIndexAdd(
         JNIEnv* env, jclass, jlong handle,
         jintArray ids, jobjectArray documents,
         jobjectArray metadatas, jobjectArray embeddings,
@@ -672,7 +672,7 @@ Java_com_android_server_rag_CactusWrapper_nativeIndexAdd(
 }
 
 JNIEXPORT jintArray JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeIndexQuery(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeIndexQuery(
         JNIEnv* env, jclass, jlong handle,
         jfloatArray queryEmbedding, jint embeddingDim, jint topK) {
     if (handle == 0) return nullptr;
@@ -711,7 +711,7 @@ Java_com_android_server_rag_CactusWrapper_nativeIndexQuery(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeIndexDelete(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeIndexDelete(
         JNIEnv* env, jclass, jlong handle, jintArray ids) {
     if (handle == 0) return -1;
 
@@ -729,14 +729,14 @@ Java_com_android_server_rag_CactusWrapper_nativeIndexDelete(
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeIndexDestroy(JNIEnv*, jclass, jlong handle) {
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeIndexDestroy(JNIEnv*, jclass, jlong handle) {
     if (handle != 0) {
         cactus_index_destroy(reinterpret_cast<cactus_index_t>(handle));
     }
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeComplete(
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeComplete(
         JNIEnv* env, jclass, jlong handle,
         jstring messagesJson, jstring optionsJson, jstring toolsJson) {
     if (handle == 0) {
@@ -774,7 +774,7 @@ Java_com_android_server_rag_CactusWrapper_nativeComplete(
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_android_server_rag_CactusWrapper_nativeGetLastError(JNIEnv* env, jclass) {
+Java_com_android_server_jarvis_inference_CactusWrapper_nativeGetLastError(JNIEnv* env, jclass) {
     const char* error = cactus_get_last_error();
     return env->NewStringUTF(error ? error : "");
 }

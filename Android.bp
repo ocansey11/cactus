@@ -61,7 +61,7 @@ cc_library_shared {
         // NPU (CPU fallback only — npu_ane.mm is iOS/macOS, excluded)
         "cactus/npu/npu.cpp",
 
-        // JNI bridge — com.cactus + com.android.server.rag.CactusWrapper
+        // JNI bridge — com.cactus + com.android.server.jarvis.inference.CactusWrapper
         "android/cactus_jni.cpp",
     ],
 
