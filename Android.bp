@@ -1,0 +1,136 @@
+// Android.bp — libcactus for JarvisOS (Soong).
+//
+// Mirrors the upstream CMake build (cactus-kernels + cactus-graph +
+// cactus-engine) with three deliberate differences:
+//   * jarvisos/jarvis_jni.cpp replaces android/cactus_jni.cpp (system-service
+//     bindings instead of the com.cactus app bindings).
+//   * jarvisos/telemetry_stub.cpp replaces cactus-engine/src/telemetry_impl.cpp.
+//   * CACTUS_USE_CURL is not defined and libcurl is not linked, so cloud
+//     handoff in cloud.cpp compiles to its "curl_not_enabled" fallback.
+// Net effect: the library has no network code in it.
+//
+// When rebasing onto a new upstream release, re-check the three source lists
+// below against the add_library() calls in each CMakeLists.txt.
+// Output: /system/lib64/libcactus.so, loaded by CactusWrapper.java.
+
+cc_library_shared {
+    name: "libcactus",
+
+    srcs: [
+        // cactus-kernels
+        "cactus-kernels/src/attention.cpp",
+        "cactus-kernels/src/attention_hybrid.cpp",
+        "cactus-kernels/src/blas.cpp",
+        "cactus-kernels/src/conv.cpp",
+        "cactus-kernels/src/conv2d.cpp",
+        "cactus-kernels/src/dsp.cpp",
+        "cactus-kernels/src/fused.cpp",
+        "cactus-kernels/src/image.cpp",
+        "cactus-kernels/src/lstm.cpp",
+        "cactus-kernels/src/matmul.cpp",
+        "cactus-kernels/src/nn.cpp",
+        "cactus-kernels/src/norms_rope.cpp",
+        "cactus-kernels/src/quants.cpp",
+        "cactus-kernels/src/reduce.cpp",
+        "cactus-kernels/src/scalar.cpp",
+        "cactus-kernels/src/metal_backend_stub.cpp",
+
+        // cactus-graph
+        "cactus-graph/src/core.cpp",
+        "cactus-graph/src/builder.cpp",
+        "cactus-graph/src/execute.cpp",
+        "cactus-graph/src/metal_runtime.cpp",
+        "cactus-graph/src/metal_plan.cpp",
+        "cactus-graph/src/io.cpp",
+        "cactus-graph/src/param_io.cpp",
+        "cactus-graph/src/ops_math.cpp",
+        "cactus-graph/src/ops_nn.cpp",
+        "cactus-graph/src/ops_conv.cpp",
+        "cactus-graph/src/ops_recurrent.cpp",
+        "cactus-graph/src/ops_tensor.cpp",
+        "cactus-graph/src/ops_sample.cpp",
+        "cactus-graph/src/ops_cache.cpp",
+        "cactus-graph/src/ops_dsp.cpp",
+        "cactus-graph/src/ops_image.cpp",
+        "cactus-graph/src/graph_ffi.cpp",
+        "cactus-graph/src/last_error.cpp",
+
+        // cactus-engine (telemetry_impl.cpp intentionally omitted)
+        "cactus-engine/src/bpe.cpp",
+        "cactus-engine/src/sp.cpp",
+        "cactus-engine/src/constraints.cpp",
+        "cactus-engine/src/model.cpp",
+        "cactus-engine/src/model_npu.cpp",
+        "cactus-engine/src/kv_compress.cpp",
+        "cactus-engine/src/engine_image.cpp",
+        "cactus-engine/src/index.cpp",
+        "cactus-engine/src/index_ffi.cpp",
+        "cactus-engine/src/log.cpp",
+        "cactus-engine/src/rag.cpp",
+        "cactus-engine/src/telemetry.cpp",
+        "cactus-engine/src/cloud.cpp",
+        "cactus-engine/src/init.cpp",
+        "cactus-engine/src/embed.cpp",
+        "cactus-engine/src/complete.cpp",
+        "cactus-engine/src/transcribe.cpp",
+        "cactus-engine/src/stream.cpp",
+        "cactus-engine/src/tokenizer.cpp",
+        "cactus-engine/src/npu.cpp",
+
+        // JarvisOS
+        "jarvisos/telemetry_stub.cpp",
+        "jarvisos/jarvis_jni.cpp",
+    ],
+
+    local_include_dirs: [
+        "cactus-kernels",
+        "cactus-kernels/src",
+        "cactus-kernels/libs",
+        "cactus-graph",
+        "cactus-graph/src",
+        "cactus-engine",
+        "cactus-engine/src",
+        "cactus-engine/libs",
+    ],
+
+    shared_libs: [
+        "liblog",
+    ],
+
+    cpp_std: "c++20",
+
+    cflags: [
+        "-O3",
+        "-DNDEBUG",
+        "-DCACTUS_COMPILE_TIME_VERSION=\"2.2.2\"",
+        "-march=armv8.2-a+fp16+simd+dotprod+i8mm",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
+        // Third-party code: keep its warnings from failing the platform build.
+        "-Wno-error",
+        "-Wno-unused-parameter",
+        "-Wno-missing-field-initializers",
+    ],
+
+    cppflags: [
+        "-fexceptions",
+    ],
+
+    ldflags: [
+        "-Wl,--gc-sections",
+        "-Wl,--exclude-libs,ALL",
+    ],
+
+    stl: "libc++",
+
+    // arm64 only, like upstream (its CMake FATAL_ERRORs on any other ABI).
+    compile_multilib: "64",
+    enabled: false,
+    arch: {
+        arm64: {
+            enabled: true,
+        },
+    },
+}
