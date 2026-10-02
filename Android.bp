@@ -93,6 +93,8 @@ cc_library_shared {
         "cactus-engine/libs",
     ],
 
+    header_libs: ["jni_headers"],
+
     shared_libs: [
         "liblog",
     ],
@@ -112,6 +114,8 @@ cc_library_shared {
         "-Wno-error",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
+        // Soong promotes this to an error globally; model_npu.cpp trips it.
+        "-Wno-unreachable-code-loop-increment",
     ],
 
     cppflags: [
