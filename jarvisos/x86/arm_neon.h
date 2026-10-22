@@ -7,6 +7,13 @@
 // simde/arm/neon.h). It is on the include path for x86_64 only; arm64
 // builds still use the real header. Correctness, not speed, is the goal:
 // the emulator proves the Cactus path works, the phone measures it.
+//
+// Also needs -D__fp16=_Float16: on x86 __fp16 is storage-only and cannot be
+// a parameter or return type, which Cactus uses throughout.
 #pragma once
 #define SIMDE_ENABLE_NATIVE_ALIASES
 #include "simde/arm/neon.h"
+#include "neon_aliases.h"
+
+// Types SIMDe defines but gives no native alias.
+typedef simde_float16x8x2_t float16x8x2_t;
