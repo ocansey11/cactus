@@ -105,7 +105,6 @@ cc_library_shared {
         "-O3",
         "-DNDEBUG",
         "-DCACTUS_COMPILE_TIME_VERSION=\"2.2.2\"",
-        "-march=armv8.2-a+fp16+simd+dotprod+i8mm",
         "-ffunction-sections",
         "-fdata-sections",
         "-fvisibility=hidden",
@@ -129,12 +128,36 @@ cc_library_shared {
 
     stl: "libc++",
 
-    // arm64 only, like upstream (its CMake FATAL_ERRORs on any other ABI).
+    // arm64 for the phone, like upstream (its CMake FATAL_ERRORs on any
+    // other ABI). x86_64 for the emulator only: jarvisos/x86/arm_neon.h maps
+    // the NEON intrinsics onto SSE/AVX with SIMDe. It proves the Cactus path
+    // works on the emulator; it says nothing about speed on the phone.
+    // jarvisos/x86/host-test.sh runs Cactus's own kernel tests through it.
     compile_multilib: "64",
     enabled: false,
     arch: {
         arm64: {
             enabled: true,
+            cflags: ["-march=armv8.2-a+fp16+simd+dotprod+i8mm"],
+        },
+        x86_64: {
+            enabled: true,
+            local_include_dirs: ["jarvisos/x86"],
+            // SIMDe asks clang to vectorize loops it often cannot; under
+            // ThinLTO plus --fatal-warnings each "loop not vectorized"
+            // remark fails the link. Speed is not the point on x86_64.
+            lto: {
+                never: true,
+            },
+            cflags: [
+                // The emulator runs with -cpu host, which has these (llama.cpp needs them too).
+                "-mavx2",
+                "-mfma",
+                "-mf16c",
+                // x86 __fp16 is storage-only; Cactus passes it by value.
+                "-D__fp16=_Float16",
+                "-Wno-keyword-macro",
+            ],
         },
     },
 }
